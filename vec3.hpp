@@ -132,6 +132,13 @@ vec3 random_in_hemisphere(const vec3& normal) {
         return -in_unit_sphere;
 }
 
+vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat) {
+    auto cos_theta = dot(-uv, n);
+    vec3 r_out_perp = etai_over_etat * (uv + cos_theta * n);
+    vec3 r_out_parallel = -sqrt(fabs(1.0 - r_out_perp.length_squared())) * n;
+    return r_out_perp + r_out_parallel;
+}
+
 using point3 = vec3;
 using color = vec3;
 
