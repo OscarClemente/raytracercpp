@@ -11,9 +11,9 @@ class Sphere : public Hittable {
         virtual bool hit(const Ray& r, double tmin, double tmax, hit_record& rec) const override;
 
     private:
-        Point3 center;
-        double radius;
-        shared_ptr<IMaterial> mat_ptr;
+        Point3 mCenter;
+        double mRadius;
+        shared_ptr<IMaterial> mMatPtr;
 };
 
 #endif

@@ -14,8 +14,8 @@ class Ray {
         Point3 at(double t) const;
 
     private:
-        Point3 orig;
-        Vec3 dir;
+        Point3 mOrig;
+        Vec3 mDir;
 };
 
 #endif

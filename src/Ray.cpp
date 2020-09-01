@@ -1,21 +1,21 @@
 #include "Ray.hpp"
 
 Ray::Ray(const Point3& origin, const Vec3& direction)
-        : orig(origin), dir(direction)
+        : mOrig(origin), mDir(direction)
 {
 }
 
 Point3 Ray::origin() const 
 {
-    return orig;
+    return mOrig;
 }
 
 Vec3 Ray::direction() const
 {
-    return dir;
+    return mDir;
 }
 
 Point3 Ray::at(double t) const
 {
-    return orig + t*dir;
+    return mOrig + t * mDir;
 }

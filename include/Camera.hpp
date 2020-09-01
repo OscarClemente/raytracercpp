@@ -17,12 +17,12 @@ class Camera {
         Ray get_Ray(double s, double t) const;
 
     private:
-        Point3 origin;
-        Point3 lower_left_corner;
-        Vec3 horizontal;
-        Vec3 vertical;
+        Point3 mOrigin;
+        Point3 mLowerLeftCorner;
+        Vec3 mHorizontal;
+        Vec3 mVertical;
         Vec3 u, v, w;
-        double lens_radius;
+        double mLensRadius;
 };
 
 #endif

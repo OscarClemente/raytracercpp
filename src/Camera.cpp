@@ -18,17 +18,17 @@ Camera::Camera(Point3 lookfrom,
     u = unit_vector(cross(vup, w));
     v = cross(w, u);
 
-    origin = lookfrom;
-    horizontal = focus_dist * viewport_width * u;
-    vertical = focus_dist * viewport_height * v;
-    lower_left_corner = origin - horizontal/2 -vertical/2 - focus_dist*w;
+    mOrigin = lookfrom;
+    mHorizontal = focus_dist * viewport_width * u;
+    mVertical = focus_dist * viewport_height * v;
+    mLowerLeftCorner = mOrigin - mHorizontal/2 - mVertical/2 - focus_dist*w;
 
-    lens_radius = aperture / 2;
+    mLensRadius = aperture / 2;
 }
 
 Ray Camera::get_Ray(double s, double t) const {
-    Vec3 rd = lens_radius * random_in_unit_disk();
+    Vec3 rd = mLensRadius * random_in_unit_disk();
     Vec3 offset = u * rd.x() + v * rd.y();
 
-    return Ray(origin + offset, lower_left_corner + s*horizontal + t*vertical - origin - offset);
+    return Ray(mOrigin + offset, mLowerLeftCorner + s * mHorizontal + t * mVertical - mOrigin - offset);
 }

@@ -12,8 +12,8 @@ class Metal : public IMaterial {
         virtual bool scatter(const Ray& r_in, const hit_record& rec, Color& attenuation, Ray& scattered) const override;
 
     private:
-        Color albedo;
-        double fuzz;
+        Color mAlbedo;
+        double mFuzz;
 };
 
 #endif

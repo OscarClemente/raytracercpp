@@ -12,7 +12,7 @@ class Dielectric : public IMaterial {
         virtual bool scatter(const Ray& r_in, const hit_record& rec, Color& attenuation, Ray& scattered) const override;
 
     private:
-        double ref_idx;
+        double mRefIdx;
         double schlick(double cosine, double ref_idx) const;
 };
 

@@ -10,7 +10,7 @@ bool HittableList::hit(const Ray& r, double tmin, double tmax, hit_record& rec) 
     bool hit_anything = false;
     auto closest_so_far = tmax;
 
-    for (const auto& object : objects) {
+    for (const auto& object : mObjects) {
         if (object->hit(r, tmin, closest_so_far, temp_rec)) {
             hit_anything = true;
             closest_so_far = temp_rec.t;
@@ -23,10 +23,10 @@ bool HittableList::hit(const Ray& r, double tmin, double tmax, hit_record& rec) 
 
 void HittableList::clear()
 {
-    objects.clear();
+    mObjects.clear();
 }
 
 void HittableList::add(shared_ptr<Hittable> object)
 {
-    objects.push_back(object);
+    mObjects.push_back(object);
 }

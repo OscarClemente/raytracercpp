@@ -1,13 +1,13 @@
 #include "materials/Dielectric.hpp"
 
-Dielectric::Dielectric(double ri) : ref_idx(ri)
+Dielectric::Dielectric(double ri) : mRefIdx(ri)
 {  
 }
 
 bool Dielectric::scatter(const Ray& r_in, const hit_record& rec, Color& attenuation, Ray& scattered) const
 {
     attenuation = Color(1.0, 1.0, 1.0);
-    double etai_over_etat = rec.front_face ? (1.0 / ref_idx): ref_idx;
+    double etai_over_etat = rec.front_face ? (1.0 / mRefIdx): mRefIdx;
 
     Vec3 unit_direction = unit_vector(r_in.direction());
 
