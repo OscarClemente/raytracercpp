@@ -1,5 +1,5 @@
 # raytracercpp (WIP)
-Basic raytracer in C++ developed for fun and learning purposes. It outputs a .ppm image based on the scene defined in-code. Currently only spheres are supported along with lambertian, metalalic and dielectric materials.
+Basic raytracer in C++ developed for fun and learning purposes from scratch. It outputs a .ppm image based on the scene defined in-code. Currently only spheres are supported along with lambertian, metalalic and dielectric materials.
 
 <p align="center">
   <img src="./img/img1.jpeg" alt="Many spheres of different materials and sizes" width="738">

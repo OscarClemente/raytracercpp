@@ -79,17 +79,17 @@ int main()
 {
     // Image
     const auto aspect_ratio = 16.0 / 9.0;
-    const int image_width = 400;
+    const int image_width = 1920;
     const int image_height = static_cast<int>(image_width/aspect_ratio);
-    const int samples_per_pixel = 20;
-    const int max_depth = 10;
+    const int samples_per_pixel = 500;
+    const int max_depth = 50;
 
     // World
     
     auto R = cos(pi/4);
     HittableList world;
 
-    auto material_ground = make_shared<Lambertian>(Color(0.8, 0.8, 0.0));
+    /*auto material_ground = make_shared<Lambertian>(Color(0.8, 0.8, 0.0));
     auto material_center = make_shared<Lambertian>(Color(0.1, 0.2, 0.5));
     auto material_left   = make_shared<Dielectric>(1.5);
     auto material_right  = make_shared<Metal>(Color(0.8, 0.6, 0.2), 0.0);
@@ -98,14 +98,24 @@ int main()
     world.add(make_shared<Sphere>(Point3( 0.0,    0.0, -1.0),   0.5, material_center));
     world.add(make_shared<Sphere>(Point3(-1.0,    0.0, -1.0),   0.5, material_left));
     world.add(make_shared<Sphere>(Point3(-1.0,    0.0, -1.0), -0.45, material_left));
+    world.add(make_shared<Sphere>(Point3( 1.0,    0.0, -1.0),   0.5, material_right));*/
+
+    auto material_ground = make_shared<Lambertian>(Color(0.8, 0.8, 0.0));
+    auto material_center = make_shared<Lambertian>(Color(0.7, 0.3, 0.3));
+    auto material_left   = make_shared<Metal>(Color(0.8, 0.8, 0.8), 0.0);
+    auto material_right  = make_shared<Metal>(Color(0.8, 0.6, 0.2), 0.3);
+
+    world.add(make_shared<Sphere>(Point3( 0.0, -100.5, -1.0), 100.0, material_ground));
+    world.add(make_shared<Sphere>(Point3( 0.0,    0.0, -1.0),   0.5, material_center));
+    world.add(make_shared<Sphere>(Point3(-1.0,    0.0, -1.0),   0.5, material_left));
     world.add(make_shared<Sphere>(Point3( 1.0,    0.0, -1.0),   0.5, material_right));
     
     //auto world = random_scene();
     // Camera
-    Point3 lookfrom(3, 2, 3);
-    Point3 lookat(0, 0, 0);
+    Point3 lookfrom(0, 1, 4);
+    Point3 lookat(0, 0, -1);
     Vec3 vup(0, 1, 0);
-    auto dist_to_focus = 10.0;
+    auto dist_to_focus = 5.0;
     auto aperture = 0.1;
 
     Camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
