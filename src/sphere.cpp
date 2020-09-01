@@ -1,20 +1,9 @@
-#ifndef SPHERE_HPP
-#define SPHERE_HPP
+#include "sphere.hpp"
 
-#include "hittable.hpp"
-#include "vec3.hpp"
-
-class sphere : public hittable {
-    public:
-        sphere() {}
-        sphere(point3 cen, double r, shared_ptr<material> m) : center(cen), radius(r), mat_ptr(m) {};
-
-        virtual bool hit(const ray& r, double tmin, double tmax, hit_record& rec) const override;
-
-        point3 center;
-        double radius;
-        shared_ptr<material> mat_ptr;
-};
+sphere::sphere(point3 cen, double r, shared_ptr<IMaterial> m) 
+        : center(cen), radius(r), mat_ptr(m)
+{  
+}
 
 bool sphere::hit(const ray& r, double tmin, double tmax, hit_record& rec) const {
     vec3 oc = r.origin() - center;
@@ -50,5 +39,3 @@ bool sphere::hit(const ray& r, double tmin, double tmax, hit_record& rec) const 
 
     return false;
 }
-
-#endif
