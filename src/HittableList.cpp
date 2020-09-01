@@ -1,11 +1,11 @@
-#include "hittable_list.hpp"
+#include "HittableList.hpp"
 
-hittable_list::hittable_list(shared_ptr<hittable> object)
+HittableList::HittableList(shared_ptr<Hittable> object)
 {
     add(object);
 }
 
-bool hittable_list::hit(const ray& r, double tmin, double tmax, hit_record& rec) const {
+bool HittableList::hit(const Ray& r, double tmin, double tmax, hit_record& rec) const {
     hit_record temp_rec;
     bool hit_anything = false;
     auto closest_so_far = tmax;
@@ -21,12 +21,12 @@ bool hittable_list::hit(const ray& r, double tmin, double tmax, hit_record& rec)
     return hit_anything;
 }
 
-void hittable_list::clear()
+void HittableList::clear()
 {
     objects.clear();
 }
 
-void hittable_list::add(shared_ptr<hittable> object)
+void HittableList::add(shared_ptr<Hittable> object)
 {
     objects.push_back(object);
 }

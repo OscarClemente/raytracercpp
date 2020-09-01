@@ -2,17 +2,17 @@
 #define LAMBERTIAN_HPP
 
 #include "IMaterial.hpp"
-#include "rtweekend.hpp"
-#include "hittable.hpp"
+#include "RTAux.hpp"
+#include "Hittable.hpp"
 
 class Lambertian: public IMaterial {
     public:
-        Lambertian(const color& a);
+        Lambertian(const Color& a);
 
-        virtual bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override;
+        virtual bool scatter(const Ray& r_in, const hit_record& rec, Color& attenuation, Ray& scattered) const override;
 
     private:
-        color albedo;
+        Color albedo;
 };
 
 #endif

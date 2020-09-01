@@ -1,13 +1,13 @@
 #include "materials/Lambertian.hpp"
 
-Lambertian::Lambertian(const color& a): albedo(a)
+Lambertian::Lambertian(const Color& a): albedo(a)
 {
 }
 
-bool Lambertian::scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const
+bool Lambertian::scatter(const Ray& r_in, const hit_record& rec, Color& attenuation, Ray& scattered) const
 {
-    vec3 scatter_direction = rec.normal + random_unit_vector();
-    scattered = ray(rec.p, scatter_direction);
+    Vec3 scatter_direction = rec.normal + random_unit_vector();
+    scattered = Ray(rec.p, scatter_direction);
     attenuation = albedo;
     return true;
 }

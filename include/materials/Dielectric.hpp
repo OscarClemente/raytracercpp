@@ -2,14 +2,14 @@
 #define DIELECTRIC_HPP
 
 #include "IMaterial.hpp"
-#include "rtweekend.hpp"
-#include "hittable.hpp"
+#include "RTAux.hpp"
+#include "Hittable.hpp"
 
 class Dielectric : public IMaterial {
     public:
         Dielectric(double ri);
 
-        virtual bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override;
+        virtual bool scatter(const Ray& r_in, const hit_record& rec, Color& attenuation, Ray& scattered) const override;
 
     private:
         double ref_idx;

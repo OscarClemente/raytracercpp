@@ -1,8 +1,8 @@
-#include "camera.hpp"
+#include "Camera.hpp"
 
-camera::camera(point3 lookfrom,
-               point3 lookat,
-               vec3   vup,
+Camera::Camera(Point3 lookfrom,
+               Point3 lookat,
+               Vec3   vup,
                double vfov,
                double aspect_ratio,
                double aperture,
@@ -26,9 +26,9 @@ camera::camera(point3 lookfrom,
     lens_radius = aperture / 2;
 }
 
-ray camera::get_ray(double s, double t) const {
-    vec3 rd = lens_radius * random_in_unit_disk();
-    vec3 offset = u * rd.x() + v * rd.y();
+Ray Camera::get_Ray(double s, double t) const {
+    Vec3 rd = lens_radius * random_in_unit_disk();
+    Vec3 offset = u * rd.x() + v * rd.y();
 
-    return ray(origin + offset, lower_left_corner + s*horizontal + t*vertical - origin - offset);
+    return Ray(origin + offset, lower_left_corner + s*horizontal + t*vertical - origin - offset);
 }

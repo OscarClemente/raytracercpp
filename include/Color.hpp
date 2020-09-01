@@ -1,12 +1,12 @@
 #ifndef COLOR_HPP
 #define COLOR_HPP
 
-#include "vec3.hpp"
-#include "rtweekend.hpp"
+#include "Vec3.hpp"
+#include "RTAux.hpp"
 
 #include <iostream>
 
-void write_color(std::ostream &out, color pixel_color, int samples_per_pixel) 
+void writeColor(std::ostream &out, Color pixel_color, int samples_per_pixel) 
 {
     auto r = pixel_color.x();
     auto g = pixel_color.y();
