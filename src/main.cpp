@@ -8,7 +8,11 @@
 #include "materials/Metal.hpp"
 #include "materials/Dielectric.hpp"
 
+#include <memory>
+#include <vector>
 #include <iostream>
+#include <thread>
+#include <sstream>
 
 Color rayColor(const Ray& r, const Hittable& world, int depth) {
     hit_record rec;
@@ -75,30 +79,81 @@ HittableList random_scene() {
     return world;
 }
 
+void f1(int id, int nthread, std::shared_ptr<std::stringstream> ss)
+{
+    for (int i = 0; i < 100; i++)
+    {
+        (*ss) << id << " out of " << nthread << " threads | " << i << std::endl;
+    }
+}
+/*
+int main()
+{
+    std::cout << "Start" << std::endl;
+    int nthreads = 4;
+    std::vector<std::shared_ptr<std::stringstream>> ssVector;
+    std::vector<std::thread> tVector;
+
+    for (int i = 0; i < nthreads; i++)
+    {
+        std::shared_ptr<std::stringstream> ss = std::make_shared<std::stringstream>();
+        ssVector.push_back(ss);
+        std::thread t(f1, i, nthreads, ss);
+        tVector.push_back(std::move(t));
+    }
+
+    for (int i = 0; i < nthreads; i++)
+    {
+        tVector.at(i).join();
+        std::cout << ssVector.at(i)->str();
+    }
+
+    std::cout << "End" << std::endl;
+}
+*/
+struct RenderData
+{
+    Camera* cam;
+    HittableList* world;
+    int image_width;
+    int image_height;
+    int samples_per_pixel;
+    int max_depth;
+};
+
+void renderPixels(int threadId, std::shared_ptr<std::stringstream> ss, RenderData renderData, int fromLine, int toLine)
+{
+    for (int j = fromLine - 1; j >= toLine; --j)
+    {
+        //std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
+        //std::cerr << "Thread: " << threadId << " Scanlines remaining: " << j << std::endl;
+        for (int i = 0; i < renderData.image_width; ++i)
+        {
+            Color pixel_color(0, 0, 0);
+            for (int s = 0; s < renderData.samples_per_pixel; ++s) {
+                auto u = (i + random_double()) / (renderData.image_width-1);
+                auto v = (j + random_double()) / (renderData.image_height-1);
+                Ray r = renderData.cam->get_Ray(u, v);
+                pixel_color += rayColor(r, *(renderData.world), renderData.max_depth);
+            }
+            writeColor((*ss), pixel_color, renderData.samples_per_pixel);
+        }       
+    }
+}
+
 int main()
 {
     // Image
     const auto aspect_ratio = 16.0 / 9.0;
-    const int image_width = 1920;
+    const int image_width = 400;
     const int image_height = static_cast<int>(image_width/aspect_ratio);
-    const int samples_per_pixel = 500;
-    const int max_depth = 50;
+    const int samples_per_pixel = 100;
+    const int max_depth = 20;
 
     // World
     
     auto R = cos(pi/4);
     HittableList world;
-
-    /*auto material_ground = make_shared<Lambertian>(Color(0.8, 0.8, 0.0));
-    auto material_center = make_shared<Lambertian>(Color(0.1, 0.2, 0.5));
-    auto material_left   = make_shared<Dielectric>(1.5);
-    auto material_right  = make_shared<Metal>(Color(0.8, 0.6, 0.2), 0.0);
-
-    world.add(make_shared<Sphere>(Point3( 0.0, -100.5, -1.0), 100.0, material_ground));
-    world.add(make_shared<Sphere>(Point3( 0.0,    0.0, -1.0),   0.5, material_center));
-    world.add(make_shared<Sphere>(Point3(-1.0,    0.0, -1.0),   0.5, material_left));
-    world.add(make_shared<Sphere>(Point3(-1.0,    0.0, -1.0), -0.45, material_left));
-    world.add(make_shared<Sphere>(Point3( 1.0,    0.0, -1.0),   0.5, material_right));*/
 
     auto material_ground = make_shared<Lambertian>(Color(0.8, 0.8, 0.0));
     auto material_center = make_shared<Lambertian>(Color(0.7, 0.3, 0.3));
@@ -119,24 +174,46 @@ int main()
     auto aperture = 0.1;
 
     Camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
-    // Rendering
+
+    // Rendering data in a struct to bundle them up a bit
+    RenderData renderData;
+    renderData.cam = &cam;
+    renderData.world = &world;
+    renderData.image_width = image_width;
+    renderData.image_height = image_height;
+    renderData.samples_per_pixel = samples_per_pixel;
+    renderData.max_depth = max_depth;
+
+    // image_height, image_width, samples_per_pixel, camera, world, max_depth);
 
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
-    for (int j = image_height - 1; j >= 0; --j)
+    int nThreads = 6;
+
+    std::cerr << "Rendering with " << nThreads << " threads." << std::endl;
+
+    std::vector<std::shared_ptr<std::stringstream>> ssVector;
+    std::vector<std::thread> threadVector;
+
+    for (int i = 0; i < nThreads; i++)
     {
-        std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
-        for (int i = 0; i < image_width; ++i)
-        {
-            Color pixel_color(0, 0, 0);
-            for (int s = 0; s < samples_per_pixel; ++s) {
-                auto u = (i + random_double()) / (image_width-1);
-                auto v = (j + random_double()) / (image_height-1);
-                Ray r = cam.get_Ray(u, v);
-                pixel_color += rayColor(r, world, max_depth);
-            }
-            writeColor(std::cout, pixel_color, samples_per_pixel);
-        }       
+        std::shared_ptr<std::stringstream> ss = std::make_shared<std::stringstream>();
+        ssVector.push_back(ss);
+
+        int step = renderData.image_height / nThreads;
+        int fromLine = renderData.image_height - (step * i);
+        int toLine = renderData.image_height - (step * (i + 1));
+
+        std::thread t(renderPixels, i, ss, renderData, fromLine, toLine);
+        threadVector.push_back(std::move(t));
     }
+
+    for (int i = 0; i < nThreads; i++)
+    {
+        threadVector.at(i).join();
+        std::cout << ssVector.at(i)->str();
+    }
+
+    std::cout << "End" << std::endl;
     std::cerr << "\nDone.\n";
 }
