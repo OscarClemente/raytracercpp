@@ -1,12 +1,7 @@
 #include "RTAux.hpp"
 #include "Color.hpp"
 #include "HittableList.hpp"
-#include "Sphere.hpp"
 #include "Camera.hpp"
-#include "materials/IMaterial.hpp"
-#include "materials/Lambertian.hpp"
-#include "materials/Metal.hpp"
-#include "materials/Dielectric.hpp"
 #include "Scenes.hpp"
 
 #include <memory>
