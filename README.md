@@ -13,9 +13,9 @@ Basic raytracer in C++ developed for fun and learning purposes from scratch. It 
 * Depth of Field.
 * Antialiasing.
 * Positionable camera.
+* Multi-threading (number of threads hardcoded for now).
 
 ## Future features
-* Multi-threading.
 * Polygon geometry support
 * Scene configuration from a config file.
 
