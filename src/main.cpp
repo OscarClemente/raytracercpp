@@ -13,6 +13,9 @@
 #include <iostream>
 #include <thread>
 #include <sstream>
+#include <utility>
+#include <mutex>
+#include <chrono>
 
 Color rayColor(const Ray& r, const Hittable& world, int depth) {
     hit_record rec;
@@ -111,6 +114,14 @@ int main()
     std::cout << "End" << std::endl;
 }
 */
+struct RenderChunk
+{
+    int state;
+    std::shared_ptr<std::stringstream> ss;
+    std::pair<int, int> ulPoint;
+    std::pair<int, int> lrPoint;
+};
+
 struct RenderData
 {
     Camera* cam;
@@ -121,9 +132,49 @@ struct RenderData
     int max_depth;
 };
 
-void renderPixels(int threadId, std::shared_ptr<std::stringstream> ss, RenderData renderData, int fromLine, int toLine)
+void renderPixels(int threadId, RenderData renderData, std::vector<std::shared_ptr<RenderChunk>> &chunkVector, std::mutex &mtx)
 {
-    for (int j = fromLine - 1; j >= toLine; --j)
+    for (int cId = 0; cId < chunkVector.size(); cId++)
+    {
+        mtx.lock();
+        if (chunkVector.at(cId)->state != 0)
+        {
+            // Check next chunk
+            mtx.unlock();
+            continue;
+        }
+
+        chunkVector.at(cId)->state = 1; // rendering
+        mtx.unlock();
+
+        std::shared_ptr<RenderChunk> renderChunk = chunkVector.at(cId);
+
+        //std::cerr << "ulx: " << renderChunk->ulPoint.first << " uly: " << renderChunk->ulPoint.second << " lrx: " << renderChunk->lrPoint.first << " lry: " << renderChunk->lrPoint.second << std::endl;
+
+        // other function
+        for (int j = renderChunk->ulPoint.second; j >= renderChunk->lrPoint.second; j--)
+        {
+            for (int i = renderChunk->ulPoint.first; i <= renderChunk->lrPoint.first; i++)
+            {
+                //std::cerr << "thread: " << threadId << " i (x): " << i << " j (y): " << j << std::endl; 
+                Color pixel_color(0, 0, 0);
+                for (int s = 0; s < renderData.samples_per_pixel; ++s) {
+                    auto u = (i + random_double()) / (renderData.image_width-1);
+                    auto v = (j + random_double()) / (renderData.image_height-1);
+                    Ray r = renderData.cam->get_Ray(u, v);
+                    pixel_color += rayColor(r, *(renderData.world), renderData.max_depth);
+                }
+                writeColor((*renderChunk->ss), pixel_color, renderData.samples_per_pixel);
+            }
+        }
+
+        mtx.lock();
+        renderChunk->state = 2;
+        mtx.unlock();
+    }
+}
+/*
+    for (int j = imageHeight - 1; j >= 0; --j)
     {
         //std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
         //std::cerr << "Thread: " << threadId << " Scanlines remaining: " << j << std::endl;
@@ -138,21 +189,19 @@ void renderPixels(int threadId, std::shared_ptr<std::stringstream> ss, RenderDat
             }
             writeColor((*ss), pixel_color, renderData.samples_per_pixel);
         }       
-    }
-}
+    }*/
 
 int main()
 {
     // Image
     const auto aspect_ratio = 16.0 / 9.0;
-    const int image_width = 400;
+    const int image_width = 800;
     const int image_height = static_cast<int>(image_width/aspect_ratio);
-    const int samples_per_pixel = 100;
+    const int samples_per_pixel = 50;
     const int max_depth = 20;
 
     // World
     
-    auto R = cos(pi/4);
     HittableList world;
 
     auto material_ground = make_shared<Lambertian>(Color(0.8, 0.8, 0.0));
@@ -192,26 +241,88 @@ int main()
 
     std::cerr << "Rendering with " << nThreads << " threads." << std::endl;
 
-    std::vector<std::shared_ptr<std::stringstream>> ssVector;
     std::vector<std::thread> threadVector;
+    std::vector<std::shared_ptr<RenderChunk>> chunkVector;
+
+    // define render chunks
+    int vChunks = 64;
+    int vStep = image_height / vChunks;
+
+    if (vChunks > image_height)
+    {
+        vChunks = image_height;
+    }
+
+    for (int i = 0; i < vChunks; ++i)
+    {
+        std::shared_ptr<RenderChunk> renderChunk = std::make_shared<RenderChunk>();
+
+        std::shared_ptr<std::stringstream> ss = std::make_shared<std::stringstream>();
+
+        // Upper Left point
+        int ulx = 0;
+        int uly = (image_height - (vStep * i)) - 1;
+        auto ulPoint = std::make_pair(ulx, uly);
+
+        // Lower Right point
+        int lrx = image_width - 1;
+        int lry = image_height - (vStep * (i + 1));
+
+        if (i == vChunks - 1)
+        {
+            lry = 0;
+        }
+
+        //std::cerr << "ulx: " << ulx << " uly: " << uly << " lrx: " << lrx << " lry: " << lry << std::endl;
+
+        auto lrPoint = std::make_pair(lrx, lry);
+
+        renderChunk->state = 0;
+        renderChunk->ss = ss;
+        renderChunk->ulPoint = ulPoint;
+        renderChunk->lrPoint = lrPoint;
+
+        chunkVector.push_back(renderChunk);
+    }
+
+    std::mutex mtx;
 
     for (int i = 0; i < nThreads; i++)
     {
-        std::shared_ptr<std::stringstream> ss = std::make_shared<std::stringstream>();
-        ssVector.push_back(ss);
-
-        int step = renderData.image_height / nThreads;
-        int fromLine = renderData.image_height - (step * i);
-        int toLine = renderData.image_height - (step * (i + 1));
-
-        std::thread t(renderPixels, i, ss, renderData, fromLine, toLine);
+        std::thread t(renderPixels, i, renderData, std::ref(chunkVector), std::ref(mtx));
         threadVector.push_back(std::move(t));
     }
 
-    for (int i = 0; i < nThreads; i++)
+    bool allChunksFinished = false;
+
+    while (!allChunksFinished)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        bool accumulatedChunksFinished = true;
+
+        std::cerr << "\rWorking: ";
+
+        for (int i = 0; i < chunkVector.size(); i++)
+        {
+            mtx.lock();
+            int chunkState = chunkVector.at(i)->state;
+            mtx.unlock();
+            accumulatedChunksFinished &= chunkState == 2;
+            std::cerr << chunkState;
+        }
+        std::cerr << std::flush;
+
+        allChunksFinished = accumulatedChunksFinished;
+    }
+
+    for (int i = 0; i < threadVector.size(); i++)
     {
         threadVector.at(i).join();
-        std::cout << ssVector.at(i)->str();
+    }
+
+    for (int i = 0; i < chunkVector.size(); i++)
+    {
+        std::cout << chunkVector.at(i)->ss->str();
     }
 
     std::cout << "End" << std::endl;
